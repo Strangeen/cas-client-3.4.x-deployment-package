@@ -1,35 +1,10 @@
-<%-- 
-Copyright (c) 2008, Martin W. Kirst
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without 
-modification, are permitted provided that the following conditions are met: 
-
-* Redistributions of source code must retain the above copyright notice, 
-  this list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-
-* Neither the name of the Martin W. Kirst nor the names of its 
-  contributors may be used to endorse or promote products derived from 
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS 
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER 
-OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
---%>
-<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-    pageEncoding="ISO-8859-1"%>
+<%@page import="java.net.URLEncoder"%>
+<%@page import="org.jasig.cas.client.util.AssertionHolder"%>
+<%@page import="org.jasig.cas.client.validation.Assertion"%>
+<%@page import="java.util.Map"%>
+<%@page import="org.jasig.cas.client.authentication.AttributePrincipal"%>
+<%@ page language="java" contentType="text/html; charset=utf-8"
+    pageEncoding="utf-8"%>
 <%
 	response.setHeader("Cache-Control","no-cache"); //HTTP 1.1
 	response.setHeader("Pragma","no-cache"); //HTTP 1.0
@@ -38,27 +13,40 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Protected area</title>
+<title>登录访问页面</title>
 <link rel="stylesheet" type="text/css" href="<%= request.getContextPath() %>/main.css">
 </head>
 <body>
 <jsp:include page="/include_header.jsp" />
-<h2>PROTECTED AREA</h2>
+<h2>登陆访问页面</h2>
 
-<h3>Single Sign On data</h3>
-<dl>
-	<dt>Your user name:</dt>
-	<dd><%= request.getRemoteUser()== null ? "null" : request.getRemoteUser() %></dd>
-</dl>
+<h3>Attribute获取</h3>
+<p>
+	用户名：<br>
+	<%= request.getRemoteUser()== null ? "null" : request.getRemoteUser() %>
+</p>
+<p>
+	其他信息：
+	<br><br>1. request获取：<br>
+	<%
+	AttributePrincipal principal = (AttributePrincipal) request.getUserPrincipal();
+	Map attributes = principal.getAttributes();
+	%>
+	<%= attributes %>
+	
+	<br><br>2. session获取：<br>
+	<%=((Assertion)session.getAttribute("_const_cas_assertion_")).getPrincipal().getAttributes()%>
+	
+	<br><br>3. AssertionHolder获取：<br>
+	如果设置了AssertionThreadLocalFilter，就可以通过AssertionHolder获取Attribute<br>
+	<%=AssertionHolder.getAssertion().getPrincipal().getAttributes() %>
+</p>
 
-<h3>Where you want to go from here?</h3>
-<dl>
-	<dt>You can jump back in public area</dt>
-	<dd><a href="<%= request.getContextPath() %>">public area</a></dd>
+<p><a href="<%= request.getContextPath() %>">公共访问页面</a></p>
+<p><a href="../logout.jsp">退出当前应用</a></p>
+<p><a href="http://localhost:8080/cas/logout?service=<%= URLEncoder.encode("http://localhost:8081"+request.getContextPath(),"utf-8") %>">
+	退出所有应用</a>（需要使用cas service部署包才能退出后重定向会当前应用，还需要更改service的值为登出后跳转的地址）</p>
 
-	<dt>Or you can</dt>
-	<dd><a href="<%= request.getContextPath() %>/protected/getpt.jsp">request a proxy ticket</a></dd>
-</dl>
 <jsp:include page="/include_footer.jsp" />
 </body>
 </html>
