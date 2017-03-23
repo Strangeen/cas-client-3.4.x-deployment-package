@@ -5,7 +5,7 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
 
 # Quick Start
 
-该部署包使用Eclipse配置开发，可以直接使用Eclipse导入后运行，下面提供快速开始方法：
+该部署包使用Eclipse配置开发，可以直接使用Eclipse导入后运行，下面提供tomcat下部署方法：
 
 1. 部署部署包中文件夹`/WebContent/`中的文件到tomcat的`webapps/mywebapp/`下
 
@@ -15,32 +15,32 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
     
     - 配置`context-param`：
     
-        1. **cas server部署的网站根目录地址**
+        1. **cas server部署地址**
+            ```xml
+        	<context-param>
+                <param-name>casServerUrlPrefix</param-name>
+                <param-value>http://localhost:8080/cas</param-value>
+        	</context-param>
+        	```
+        	- `<param-value>`配置为cas server部署网站地址，如果cas server部署在`http://localhost:8080/cas`下，那么该值配置为`http://localhost:8080/cas`
+    	
+        2. **cas server登录地址**
+            ```xml
+            <context-param>
+                <param-name>casServerLoginUrl</param-name>
+                <param-value>http://localhost:8080/cas/login</param-value>
+        	</context-param>
+        	```
+        	- `<param-value>`配置为cas server登录地址
+        	
+    	3. **cas client部署的网站根目录地址**
     	    ```xml
         	<context-param>
                 <param-name>serverName</param-name>
                 <param-value>http://localhost:8081</param-value>
         	</context-param>
         	```
-        	- `<param-value>`配置为cas server部署网站根目录地址，如果cas server部署在`http://localhost:8081/cas`下，那么该值配置为`http://localhost:8081`
-    
-        2. **cas server部署地址**
-            ```xml
-        	<context-param>
-                <param-name>casServerUrlPrefix</param-name>
-                <param-value>http://localhost:8081/cas</param-value>
-        	</context-param>
-        	```
-        	- `<param-value>`配置为cas server部署网站地址，如果cas server部署在`http://localhost:8081/cas`下，那么该值配置为`http://localhost:8081/cas`
-    	
-        3. **cas server登录地址**
-            ```xml
-            <context-param>
-                <param-name>casServerLoginUrl</param-name>
-                <param-value>http://localhost:8081/cas/login</param-value>
-        	</context-param>
-        	```
-        	- `<param-value>`配置为cas server登录地址
+        	- `<param-value>`配置为cas client部署网站根目录地址，如果cas client部署在`http://localhost:8081/cas`下，那么该值配置为`http://localhost:8081`
     
     - 配置需要登陆才能访问的地址
         ```
@@ -51,9 +51,9 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
         ```
         - `<url-pattern>`配置为需要登录才能访问的地址，默认为`/protected/*`，当访问`/protected/*`是会跳转到cas server要求登陆
 
-基本配置完成，启动tomcat即可通过`http://your-deployment-url/mywebapp`访问cas client，访问`localhost/mywebapp/protected`需要同时开启cas server，cas server部署包和配置参见：[cas server部署包](https://github.com/Strangeen/cas-server-4.2.x-deployment-package)
+基本配置完成，启动tomcat即可通过`http://localhost:8081/mywebapp`访问cas client，访问`http://localhost:8081/mywebapp/protected`需要同时开启cas server，cas server部署包和配置参见：[cas server部署包](https://github.com/Strangeen/cas-server-4.2.x-deployment-package)
 
-* 注：*.log文件默认保存位置配置到`D:/cas_client/logs/`下（linux请更改为`/cas_client/logs`，否则可能无法启动），如需配置见`更多配置`的`3. 日志配置`
+* 注：`*.log`文件默认保存位置配置到`D:/cas_client/logs/`下（linux请更改为`/cas_client/logs`，否则可能无法启动），如需配置见`更多配置`的`3. 日志配置`
 
 ---
 
@@ -66,9 +66,9 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
 
 - #### 配置
 	
-	见`Quick Start`第3点中`配置context-param`：
+	见上述`Quick Start`中`3. 配置context-param`：
 
-### 1. Filter配置
+### 2. Filter配置
 
 - #### 描述
     cas client配置filter用于与cas server交互，主要有5类filter，并且配置需要按如下顺序进行配置，否则无法正常使用：
@@ -79,34 +79,34 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
     
     1. ##### SingleSignOutFilter（默认已配置）
         
-        控制单点登出，当cas server退出后，会发送请求要求cas client清楚登录session，请求由该filter处理
+        控制单点登出，当cas server退出后，会发送请求要求cas client清除登录session，请求由该filter处理
         ```xml
         <filter>
-    		<filter-name>CAS Single Sign Out Filter</filter-name>
-    		<filter-class>org.jasig.cas.client.session.SingleSignOutFilter</filter-class>
+            <filter-name>CAS Single Sign Out Filter</filter-name>
+            <filter-class>org.jasig.cas.client.session.SingleSignOutFilter</filter-class>
     	</filter>
     	<filter-mapping>
-    		<filter-name>CAS Single Sign Out Filter</filter-name>
-    		<url-pattern>/*</url-pattern>
+            <filter-name>CAS Single Sign Out Filter</filter-name>
+            <url-pattern>/*</url-pattern>
     	</filter-mapping>
         ```
-
-    1. ##### AuthenticationFilter（默认已配置，参数需要自行设置）
+        
+    2. ##### AuthenticationFilter（默认已配置，参数需要自行设置）
     
         验证用户是否登陆，如果没有登录，就会重定向到cas server，进行登录操作，如果已经登陆，就会获取ST，配置如下：
         ```xml
         <filter>
             <filter-name>CAS Authentication Filter</filter-name>
             <filter-class>org.jasig.cas.client.authentication.AuthenticationFilter</filter-class>
-            <filter-mapping>
-                <filter-name>CAS Authentication Filter</filter-name>
-                <url-pattern>/protected/*</url-pattern>
-            </filter-mapping>
         </filter>
+        <filter-mapping>
+            <filter-name>CAS Authentication Filter</filter-name>
+            <url-pattern>/protected/*</url-pattern>
+        </filter-mapping>
         ```
         - `<url-pattern>`配置为需要登录才能访问的地址
 
-    2. ###### TicketValidationFilter（默认已配置）
+    3. ##### TicketValidationFilter（默认已配置）
     
         用于验证ST，默认配置使用cas protocol3.0验证，即`Cas30TicketValidationFilter`
         ```xml
@@ -120,7 +120,7 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
         </filter-mapping>
         ```
     
-    3. ###### HttpServletRequestWrapperFilter（默认已配置）
+    4. ##### HttpServletRequestWrapperFilter（默认已配置）
         
         cas封装的HttpServletRequest，通过 `getRemoteUser` 和 `getPrincipal` 方法返回Pincipal信息
         ```xml
@@ -134,7 +134,7 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
         </filter-mapping>
         ```
     
-    4. ###### AssertionThreadLocalFilter（默认已配置）
+    5. ##### AssertionThreadLocalFilter（默认已配置）
     
         将Principal信息放入ThreadLocal中，便于无法使用request的方法获取Principal信息
         ```xml
@@ -150,7 +150,7 @@ cas client用于部署在应用中，与cas server交互实现单点登录功能
 
 filter更多参数配置请参见官方文档：[Configuring the Jasig CAS Client for Java in the web.xml](https://wiki.jasig.org/display/CASC/Configuring+the+Jasig+CAS+Client+for+Java+in+the+web.xml)
 
-### 2. Listener配置
+### 3. Listener配置
     默认已配置，用于cas client的session失效后，清除记录的用于与cas server交互的TGT信息
     ```
     <listener>
@@ -158,7 +158,7 @@ filter更多参数配置请参见官方文档：[Configuring the Jasig CAS Clien
 	</listener>
 	```
 
-### 3. 日志文件位置
+### 4. 日志文件位置
 
 - `log4j2.xml`
 
